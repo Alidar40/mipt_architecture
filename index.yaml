@@ -1,0 +1,453 @@
+openapi: '3.0.0'
+info:
+  version: '1.0.0'
+  title: 'Shop API'
+  description: API for an online shop server
+servers:
+  - url: http://localhost
+    description: Shop server
+paths:
+  /user:
+    post:
+      summary: Create a new user
+      parameters:
+      - name: first_name
+        description: First name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: last_name
+        description: Last name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: email
+        description: E-mail
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: password
+        description: Password
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: type
+        description: User type (admin/manager/buyer etc.)
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        201:
+          description: A new user created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        400:
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Read a user by his email
+      parameters:
+      - name: email
+        description: User's email
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: The user corresponding to the provided `email`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        404:
+          description: No user found for the provided `email`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /user/search:
+    get:
+      summary: Search for a user by his first name and last name
+      parameters:
+      - name: first_name
+        description: First name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: last_name
+        description: Last name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Users corresponding to the provided `first_name` and `last_name`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        404:
+          description: No user found for the provided `first_name` and `last_name`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /shopping-item:
+    post:
+      summary: Create a new shopping item
+      parameters:
+      - name: sku
+        description: Item's stock keeping unit
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/id'
+      - name: name
+        description: Item's name
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: price
+        description: Item's price
+        in: query
+        required: true
+        schema:
+          type: number
+      responses:
+        201:
+          description: A new item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItem'
+        404:
+          description: No shopping item found for the provided `id`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      summary: Read an item by its SKU
+      parameters:
+      - name: sku
+        description: Items' SKU
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: The item corresponding to the provided `sku`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItem'
+        404:
+          description: No item found for the provided `sku`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /shopping-item/search:
+    get:
+      summary: Search for an item by its name
+      parameters:
+      - name: name
+        description: Item's name
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Item corresponding to the provided `name`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItem'
+        404:
+          description: No item found for the provided `name`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /shopping-item/all:
+    get:
+      summary: Get list of all items
+      parameters: []
+      responses:
+        200:
+          description: All shopping items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingItems'
+        404:
+          description: No items found at all
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /shopping-cart:
+    get:
+      summary: Get user's last shopping cart
+      parameters:
+      - name: user_id
+        description: User's identifier
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/id'
+      responses:
+        200:
+          description: Shopping cart corresponding to the provided `user_id`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingCart'
+        404:
+          description: No item found for the provided `name`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Create a new shopping cart
+      parameters:
+      - name: user_id
+        description: User's id
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/id'
+      responses:
+        201:
+          description: A new shopping cart created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingCart'
+        404:
+          description: No shopping cart found for the provided `id`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /shopping-cart/add:
+    post:
+      summary: Add an item to a shopping cart
+      parameters:
+      - name: shopping_cart_id
+        description: A desired shopping cart's id
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/id'
+      - name: shopping_item_id
+        description: A shopping item's id
+        in: query
+        required: true
+        schema:
+          $ref: '#/components/schemas/id'
+      responses:
+        200:
+          description: The item added to the shopping cart
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessMessage'
+        404:
+          description: No shopping cart found for the provided `id`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /shopping-cart/all:
+    get:
+      summary: Get all shopping carts
+      parameters: []
+      responses:
+        200:
+          description: All shopping carts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingCarts'
+        404:
+          description: No shopping carts found at all
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        500:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    id:
+      description: Unique identifier
+      type: integer
+    
+    Users:
+      type: array
+      items:
+        $ref: '#/components/schemas/User'
+    User:
+      type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+        - password
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        type:
+          type: string
+    
+    ShoppingItems:
+      type: array
+      items:
+        $ref: '#/components/schemas/ShoppingItem'
+    ShoppingItem:
+      type: object
+      required:
+        - id
+        - first_name
+        - last_name
+        - email
+        - password
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        sku:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+
+    ShoppingCarts:
+      type: array
+      items:
+        $ref: '#/components/schemas/ShoppingCart'
+    ShoppingCart:
+      type: object
+      required:
+        - id
+        - user_id
+        - created
+      properties:
+        id:
+          $ref: '#/components/schemas/id'
+        user_id:
+          $ref: '#/components/schemas/id'
+        created:
+          type: string
+
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          description: A human readable error message
+          type: string
+    
+    SuccessMessage:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          description: A success message
+          type: string
+
