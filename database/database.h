@@ -15,8 +15,12 @@ namespace database{
             std::unique_ptr<Poco::Data::SessionPool> _pool;
             Database();
         public:
+            static void drop_all_tables();
             static Database& get();
             Poco::Data::Session create_session();
+            static size_t get_max_shard();
+            static std::string sharding_hint(std::string login);
+            static std::vector<std::string> get_all_hints();
     };
 }
 #endif

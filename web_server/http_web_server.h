@@ -39,6 +39,7 @@ using Poco::Util::ServerApplication;
 
 #include "http_request_factory.h"
 #include "../config/config.h"
+#include "../database/database.h"
 
 class HTTPWebServer : public Poco::Util::ServerApplication
 {
@@ -105,16 +106,30 @@ protected:
                 .required(false)
                 .repeatable(false)
                 .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handleInitDB)));
+        options.addOption(
+            Option("preload", "ppl", "preload initial values for author")
+                .required(false)
+                .repeatable(false)
+                .argument("value")
+                .callback(OptionCallback<HTTPWebServer>(this, &HTTPWebServer::handlePreLoad)));
         
     }
 
+    void handlePreLoad([[maybe_unused]] const std::string &name,
+                       [[maybe_unused]] const std::string &value)
+    {
+        std::cout << "preloading ..." << value << std::endl;
+        database::User::preload(value);
+    }
+    
     void handleInitDB([[maybe_unused]] const std::string &name,
                       [[maybe_unused]] const std::string &value)
     {
         std::cout << "init db" << std::endl;
-        database::ShoppingCart::init();
-        database::ShoppingItem::init();
+        database::Database::drop_all_tables();
         database::User::init();
+        database::ShoppingItem::init();
+        database::ShoppingCart::init();
     }
     void handleLogin([[maybe_unused]] const std::string &name,
                      [[maybe_unused]] const std::string &value)

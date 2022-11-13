@@ -25,15 +25,6 @@ namespace database
         {
 
             Poco::Data::Session session = database::Database::get().create_session();
-            //*
-            Statement drop_stmt(session);
-            drop_stmt << "SET FOREIGN_KEY_CHECKS = 0;",
-            now;
-            drop_stmt << "DROP TABLE IF EXISTS ShoppingItem;",
-            now;
-            drop_stmt << "SET FOREIGN_KEY_CHECKS = 1;",
-            now;
-            //*/
 
             // (re)create table
             Statement create_stmt(session);
