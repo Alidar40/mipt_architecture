@@ -69,6 +69,12 @@ paths:
         required: true
         schema:
           type: string
+      - name: no_cache
+        description: Process request without cache
+        in: query
+        required: false
+        schema:
+          type: boolean
       responses:
         200:
           description: The user corresponding to the provided `email`

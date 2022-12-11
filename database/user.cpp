@@ -1,5 +1,6 @@
 #include "user.h"
 #include "database.h"
+#include "cache.h"
 #include "../config/config.h"
 
 #include <Poco/Data/MySQL/Connector.h>
@@ -53,6 +54,19 @@ namespace database
             std::cout << "statement:" << e.what() << std::endl;
             throw;
         }
+    }
+
+    void User::warm_up_cache()
+    {
+        std::cout << "wharming up users cache ...";
+        auto array = read_all();
+        long count = 0;
+        for (auto &a : array)
+        {
+            a.save_to_cache();
+            ++count;
+        }
+        std::cout << "done: " << count << std::endl;
     }
     
     void User::preload(const std::string &file)
@@ -291,6 +305,23 @@ namespace database
         }
     }
 
+    std::optional<User> User::read_from_cache_by_email(std::string email)
+    {
+        try
+        {
+            std::string result;
+            if (database::Cache::get().get(email, result))
+                return fromJSON(result);
+            else
+                return std::optional<User>();
+        }
+        catch (std::exception* err)
+        {
+            std::cerr << "error:" << err->what() << std::endl;
+            throw;
+        }
+    }
+
     std::vector<User> User::read_all()
     {
         try
@@ -470,6 +501,18 @@ namespace database
             std::cout << "statement:" << e.what() << std::endl;
             throw;
         }
+    }
+
+    void User::save_to_cache()
+    {
+        std::stringstream ss;
+        Poco::JSON::Stringifier::stringify(toJSON(), ss);
+        std::string message = ss.str();
+        database::Cache::get().put(_email, message);
+    }
+
+    size_t User::size_of_cache(){
+        return database::Cache::get().size();
     }
 
     long User::get_id() const

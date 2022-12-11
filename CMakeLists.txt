@@ -9,6 +9,8 @@ find_package(GTest REQUIRED)
 find_package(Threads)
 find_package(ZLIB)
 find_package(Poco REQUIRED COMPONENTS Foundation Util Net XML JSON Crypto NetSSL)
+find_package(Java 1.8 REQUIRED)
+find_package(JNI REQUIRED)
 
 
 if(NOT ${Poco_FOUND})
@@ -20,6 +22,7 @@ include_directories(${GTEST_INCLUDE_DIRS})
 include_directories("/usr/include/mysql")
 include_directories("/usr/local/include/mysql")
 include_directories(${Boost_INCLUDE_DIR})
+include_directories(SYSTEM ${IGNITE_INCLUDE_DIR} ${JNI_INCLUDE_DIRS})
 link_directories("/usr/local/lib")
 
 add_executable(${EXAMPLE_BINARY} main.cpp 
@@ -27,7 +30,8 @@ add_executable(${EXAMPLE_BINARY} main.cpp
                                  database/database.cpp
                                  database/user.cpp
                                  database/shopping_cart.cpp
-                                 database/shopping_item.cpp)
+                                 database/shopping_item.cpp
+                                 database/cache.cpp)
 
 
 target_include_directories(${EXAMPLE_BINARY} PRIVATE "${CMAKE_BINARY_DIR}")
@@ -40,6 +44,10 @@ target_link_libraries(${EXAMPLE_BINARY} PRIVATE
                              "PocoData"
                              "PocoDataMySQL"
                              "mysqlclient"
+                             "ignite-binary"
+                             "ignite-common"
+                             ${IGNITE_JNI_LIB}
+                             "ignite-thin-client"
                              ZLIB::ZLIB)
 
 

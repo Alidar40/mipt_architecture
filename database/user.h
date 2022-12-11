@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <optional>
 #include "Poco/JSON/Object.h"
 
 namespace database
@@ -36,11 +37,15 @@ namespace database
             std::string &type();
 
             static void init();
+            static void warm_up_cache();
             static User read_by_id(long id);
             static User read_by_email(std::string email);
+            static std::optional<User> read_from_cache_by_email(std::string email);
             static std::vector<User> read_all();
             static std::vector<User> search(std::string first_name,std::string last_name);
             void save_to_mysql();
+            void save_to_cache();
+            static size_t size_of_cache();
 
             Poco::JSON::Object::Ptr toJSON() const;
 

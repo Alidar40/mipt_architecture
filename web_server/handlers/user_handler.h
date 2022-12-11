@@ -108,7 +108,6 @@ public:
         {
             try
             {
-                
                 std::string fn = form.get("first_name");
                 std::string ln = form.get("last_name");
                 auto results = database::User::search(fn, ln);
@@ -180,6 +179,7 @@ public:
                         try
                         {
                             user.save_to_mysql();
+                            user.save_to_cache();
                             response.setStatus(Poco::Net::HTTPResponse::HTTP_CREATED);
                             response.setChunkedTransferEncoding(true);
                             response.setContentType("application/json");
@@ -222,6 +222,20 @@ public:
                         return;
                     }
 
+                    bool no_cache = false;
+                    if (form.has("no_cache"))
+                        no_cache = true;
+                    // read from cache
+                    if (!no_cache)
+                    {
+                        std::optional<database::User> result = database::User::read_from_cache_by_email(email);                
+                        std::ostream &ostr = response.send();
+                        if(result){
+                            Poco::JSON::Stringifier::stringify(result->toJSON(), ostr);
+                            return;
+                        }
+                    }
+
                     try
                     {
                         response.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
@@ -229,6 +243,8 @@ public:
                         response.setContentType("application/json");
                         std::ostream &ostr = response.send();
                         database::User result = database::User::read_by_email(email);
+                        if (!no_cache)
+                            result.save_to_cache();
                         Poco::JSON::Stringifier::stringify(result.toJSON(), ostr);
                         return;
                     }
