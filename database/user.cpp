@@ -9,11 +9,13 @@
 #include <Poco/Data/RecordSet.h>
 #include <Poco/JSON/Parser.h>
 #include <Poco/Dynamic/Var.h>
+#include <cppkafka/cppkafka.h>
 
 #include <sstream>
 #include <exception>
 #include <fstream>
 #include <future>
+#include <mutex>
 
 using namespace Poco::Data::Keywords;
 using Poco::Data::Session;
@@ -26,7 +28,7 @@ namespace database
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             // (re)create table
             for (auto &hint : database::Database::get_all_hints())
             {
@@ -73,7 +75,7 @@ namespace database
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             std::string json;
             std::ifstream is(file);
             std::istream_iterator<char> eos;
@@ -171,7 +173,7 @@ namespace database
             {
                 auto handle = std::async(std::launch::async, [id, hint]() -> User
                                         {
-                                            Poco::Data::Session session = database::Database::get().create_session();
+                                            Poco::Data::Session session = database::Database::get().create_session_read();
                                             Statement select(session);
                                             User a;
                                             std::string select_str = "SELECT id, first_name, last_name, email, password, type FROM User WHERE id='";
@@ -245,7 +247,7 @@ namespace database
             {
                 auto handle = std::async(std::launch::async, [email, hint]() -> User
                                         {
-                                            Poco::Data::Session session = database::Database::get().create_session();
+                                            Poco::Data::Session session = database::Database::get().create_session_read();
                                             Statement select(session);
                                             User a;
                                             std::string select_str = "SELECT id, first_name, last_name, email, type FROM User WHERE email='";
@@ -337,7 +339,7 @@ namespace database
             {
                 auto handle = std::async(std::launch::async, [hint]() -> std::vector<User>
                                         {
-                                            Poco::Data::Session session = database::Database::get().create_session();
+                                            Poco::Data::Session session = database::Database::get().create_session_read();
                                             Statement select(session);
                                             std::vector<User> result;
                                             User a;
@@ -400,7 +402,7 @@ namespace database
             {
                 auto handle = std::async(std::launch::async, [first_name_mask, last_name_mask, hint]() -> std::vector<User>
                                         {
-                                            Poco::Data::Session session = database::Database::get().create_session();
+                                            Poco::Data::Session session = database::Database::get().create_session_read();
                                             Statement select(session);
                                             std::vector<User> result;
 
@@ -465,7 +467,7 @@ namespace database
 
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Poco::Data::Statement insert(session);
 
             std::string hint = database::Database::sharding_hint(_email);
@@ -500,6 +502,41 @@ namespace database
 
             std::cout << "statement:" << e.what() << std::endl;
             throw;
+        }
+    }
+
+    void User::save_to_queue()
+    {
+        static cppkafka::Configuration config ={
+            {"metadata.broker.list", Config::get().get_queue_host()},
+            {"acks","all"}};
+        static cppkafka::Producer producer(config);
+        static std::mutex mtx;
+        static int message_key{0};
+        using Hdr = cppkafka::MessageBuilder::HeaderType;
+        
+        std::lock_guard<std::mutex> lock(mtx);
+        std::stringstream ss;
+        Poco::JSON::Stringifier::stringify(User::toJSON(), ss);
+        std::string message = ss.str();
+        bool not_sent = true;
+
+        cppkafka::MessageBuilder builder(Config::get().get_queue_topic());
+        std::string mk=std::to_string(++message_key);
+        builder.key(mk); // set some key
+        builder.header(Hdr{"producer_type", "user writer"}); // set some custom header
+        builder.payload(message); // set message
+
+        while (not_sent)
+        {
+            try
+            {
+                producer.produce(builder);
+                not_sent = false;
+            }
+            catch (...)
+            {
+            }
         }
     }
 

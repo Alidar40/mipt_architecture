@@ -24,7 +24,7 @@ namespace database
         try
         {
 
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
 
             // (re)create table
             Statement create_stmt(session);
@@ -88,7 +88,7 @@ namespace database
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Poco::Data::Statement select(session);
             ShoppingCart a;
             select << "SELECT id, user_id, created FROM ShoppingCart WHERE id LIKE ?",
@@ -122,7 +122,7 @@ namespace database
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Poco::Data::Statement select(session);
             ShoppingCart a;
             select << "SELECT id, user_id, created FROM ShoppingCart WHERE user_id LIKE ? ORDER BY created DESC LIMIT 1",
@@ -156,7 +156,7 @@ namespace database
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Statement select(session);
             std::vector<ShoppingCart> result;
             ShoppingCart a;
@@ -191,7 +191,7 @@ namespace database
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_read();
             Statement select(session);
             std::vector<ShoppingCart> result;
             ShoppingCart a;
@@ -227,7 +227,7 @@ namespace database
     {
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Poco::Data::Statement insert(session);
 
             insert << "INSERT INTO ShoppingItem_ShoppingCart (shopping_item_id, shopping_cart_id) VALUES(?, ?)",
@@ -257,7 +257,7 @@ namespace database
 
         try
         {
-            Poco::Data::Session session = database::Database::get().create_session();
+            Poco::Data::Session session = database::Database::get().create_session_write();
             Poco::Data::Statement insert(session);
 
             // insert << "INSERT INTO ShoppingCart (user_id, created) VALUES(?, ?, ?, ?)",

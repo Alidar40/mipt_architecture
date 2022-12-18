@@ -46,6 +46,7 @@ namespace database
             void save_to_mysql();
             void save_to_cache();
             static size_t size_of_cache();
+            void save_to_queue();
 
             Poco::JSON::Object::Ptr toJSON() const;
 

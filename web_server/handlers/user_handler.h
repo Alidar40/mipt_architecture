@@ -178,8 +178,7 @@ public:
                     {
                         try
                         {
-                            user.save_to_mysql();
-                            user.save_to_cache();
+                            user.save_to_queue();
                             response.setStatus(Poco::Net::HTTPResponse::HTTP_CREATED);
                             response.setChunkedTransferEncoding(true);
                             response.setContentType("application/json");
